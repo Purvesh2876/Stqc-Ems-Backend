@@ -17,7 +17,6 @@ const macRoutes = require('./routes/macRoutes');
 const versionRoutes = require('./routes/versionRoutes');
 const genRequestsRoutes = require('./routes/genRequestsRoutes');
 const deptRoutes = require('./routes/deptRoutes');
-const salesRoutes = require("./routes/crmRoutes");
 const abdRoutes = require("./routes/abdRoutes");
 const connectDB = require('./utils/db');
 const cookieParser = require('cookie-parser');
@@ -42,7 +41,7 @@ require("dotenv").config({ path: ".env" });
 // Enable CORS
 app.use(cors(
     {
-        origin: ["https://ems.ambicam.com", "https://ems.ambicam.com/backend", "http://localhost:3001", "http://localhost:3002", "https://admin.arcisai.io", "https://www.adiance.com"],
+        origin: ["https://ems.ambicam.com", "https://ems.ambicam.com/backend", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "https://admin.arcisai.io", "https://www.adiance.com"],
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Origin, X-Requested-With, Content-Type, Accept, Authorization', 'x-api-key'],
@@ -105,7 +104,6 @@ app.use('/api/version', versionRoutes);
 app.use('/api/reqs', genRequestsRoutes);
 app.use('/api/department', deptRoutes);
 app.use("/api/quotations", quotationRoutes);
-app.use("/api/crmSales", salesRoutes);
 app.use("/api/abd", abdRoutes);
 
 
