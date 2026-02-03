@@ -6,7 +6,7 @@ const p2predirect = require("../models/p2predirect");
 // create instance of axios with custom config
 const instance = axios.create({
   // baseURL: 'https://delta.arcisai.io/backend/api/admin',
-  baseURL: "https://view.arcisai.io/backend/api/admin",
+  baseURL: "https://home.arcisai.io/backend/api/admin",
   httpsAgent: new https.Agent({
     rejectUnauthorized: false,
   }),
@@ -124,6 +124,7 @@ exports.getCameras = async (req, res) => {
 
 // add camera
 exports.addCameraToUser = async (req, res) => {
+  console.log("addCameraToUser called");
   try {
     const payload = {
       ...req.body,

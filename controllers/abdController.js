@@ -4,7 +4,7 @@ const abdListModel = require("../models/abdListModel");
 
 // create instance of axios with custom config
 const instance = axios.create({
-  baseURL: "https://dev.arcisai.io/backend/api/admin",
+  baseURL: "https://home.arcisai.io/backend/api/admin",
   // baseURL: 'https://view.arcisai.io/backend/api/admin',
   // baseURL: 'http://localhost:7073/api/admin',
   httpsAgent: new https.Agent({

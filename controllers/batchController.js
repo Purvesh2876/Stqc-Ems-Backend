@@ -1,50 +1,138 @@
 const fs = require('fs');
 const path = require('path');
-const batchModel = require('../models/batchModel');
+const Batch = require('../models/batchModel');
+const Uids = require('../models/masterUid');
 
-exports.createBatch = async (req, res) => {
-    try {
-        const { deviceIds } = req.body;
+/* ================== HELPERS ================== */
 
-        const newBatch = new batchModel({
-            deviceIds: JSON.parse(deviceIds),
-            certFolderPath: '/temp' // placeholder
-        });
+const generateRandomDigits = len =>
+  Math.floor(Math.random() * Math.pow(10, len)).toString().padStart(len, '0');
 
-        await newBatch.save();
+const generateRandomLetters = len =>
+  Array.from({ length: len }, () =>
+    String.fromCharCode(65 + Math.floor(Math.random() * 26))
+  ).join('');
 
-        const folderPath = path.join(__dirname, '..', 'certandkey', String(newBatch.batchNo));
-        fs.mkdirSync(folderPath, { recursive: true });
+/* ================== CREATE + GENERATE ================== */
 
-        const certBuffer = req.files?.cert?.[0]?.buffer;
-        const keyBuffer = req.files?.key?.[0]?.buffer;
+exports.createBatchWithUids = async (req, res) => {
+  try {
+    const { batchCode, productType, networkType, count } = req.body;
 
-        if (!certBuffer || !keyBuffer) {
-            return res.status(400).json({ success: false, message: 'Cert or key file missing' });
-        }
-
-        fs.writeFileSync(path.join(folderPath, 'cert.pem'), certBuffer);
-        fs.writeFileSync(path.join(folderPath, 'key.pem'), keyBuffer);
-
-        newBatch.certFolderPath = path.join('/certandkey', String(newBatch.batchNo));
-        await newBatch.save();
-
-        res.status(201).json({
-            success: true,
-            message: 'Batch created and files uploaded successfully',
-            data: newBatch
-        });
-    } catch (err) {
-        console.error('Batch creation error:', err);
-        res.status(500).json({ success: false, message: 'Server error' });
+    if (!req.files?.publicKey || !req.files?.seedCert) {
+      return res.status(400).json({ message: 'Public key & seed cert required' });
     }
+
+    const batch = await Batch.create({
+      batchCode,
+      productType,
+      networkType,
+      quantity: count,
+      publicKeyPath: 'temp',
+      seedCertPath: 'temp'
+    });
+
+    const folderPath = path.join(
+      __dirname, '..', 'uploads', 'batches', batchCode
+    );
+    fs.mkdirSync(folderPath, { recursive: true });
+
+    fs.writeFileSync(
+      path.join(folderPath, 'public_key.pem'),
+      req.files.publicKey[0].buffer
+    );
+    fs.writeFileSync(
+      path.join(folderPath, 'seed_cert.pem'),
+      req.files.seedCert[0].buffer
+    );
+
+    batch.publicKeyPath = `/uploads/batches/${batchCode}/public_key.pem`;
+    batch.seedCertPath = `/uploads/batches/${batchCode}/seed_cert.pem`;
+    await batch.save();
+
+    const productMap = {
+      'S-Series': 'S',
+      'A-Series': 'A',
+      'Novatek': 'N',
+      'Innofusion': 'I'
+    };
+
+    const networkMap = {
+      POE: '0',
+      WIFI: '1',
+      '4G': '2',
+      '5G': '3'
+    };
+
+    const prefix = 'ATPL';
+    const created = [];
+
+    while (created.length < Number(count)) {
+      const deviceId = `${prefix}-${networkMap[networkType]}${generateRandomDigits(5)}-${productMap[productType]}${generateRandomLetters(4)}`;
+      const exists = await Uids.findOne({ deviceId });
+      if (!exists) {
+        created.push({
+          deviceId,
+          SN: deviceId,
+          productType,
+          networkType,
+          batchId: batch._id
+        });
+      }
+    }
+
+    await Uids.insertMany(created);
+
+    res.status(201).json({
+      success: true,
+      message: 'Batch created & UIDs generated',
+      batchId: batch._id
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
+/* ================== GET ALL BATCHES ================== */
+
 exports.getAllBatches = async (req, res) => {
-    try {
-        const batches = await batchModel.find().sort({ batchNo: 1 });
-        res.status(200).json({ success: true, data: batches });
-    } catch (err) {
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
+  try {
+    const batches = await Batch.find().sort({ createdAt: -1 });
+    res.json({ success: true, data: batches });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+/* ================== GET ALL UIDS ================== */
+
+exports.getAllUids = async (req, res) => {
+  try {
+    const { page = 1, batchId, burned, deviceId } = req.query;
+
+    const query = {};
+    if (batchId) query.batchId = batchId;
+    if (deviceId) query.deviceId = deviceId;
+    if (burned === 'true') query.burned = true;
+
+    const limit = 20;
+    const skip = (page - 1) * limit;
+
+    const total = await Uids.countDocuments(query);
+    const data = await Uids.find(query)
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    res.json({
+      currentPage: Number(page),
+      totalPages: Math.ceil(total / limit),
+      totalRecords: total,
+      data
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };

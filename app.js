@@ -97,7 +97,7 @@ app.use('/api/health', healthRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/ota', otaRutes);
 app.use('/api/support', supportRoutes);
-app.use('/api/batches', batchRoutes);
+app.use('/api/production', batchRoutes);
 app.use('/api/stqc', stqcUserRoutes);
 app.use('/api/mac', macRoutes);
 app.use('/api/version', versionRoutes);

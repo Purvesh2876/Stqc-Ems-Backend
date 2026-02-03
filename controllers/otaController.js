@@ -1,5 +1,5 @@
 const Firmware = require('../models/firmware');
-const apiUrl = 'https://prong.arcisai.io:3000/clients';
+const apiUrl = 'https://pro.arcisai.io:3000/clients';
 const axios = require('axios');
 const https = require('https');
 const fs = require('fs');
@@ -10,6 +10,7 @@ const FirmwareOtaRelease = require('../models/firmwareOtaRelease');
 const httpsAgent = new https.Agent({
     rejectUnauthorized: false,
 });
+
 
 // @desc    Get all firmware versions
 // @route   GET /api/firmware

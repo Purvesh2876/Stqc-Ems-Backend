@@ -1,7 +1,7 @@
 const axios = require('axios');
 const https = require('https');
 
-const baseURL = `https://view.arcisai.io/backend/api`;
+const baseURL = `https://home.arcisai.io/backend/api`;
 
 // Create an HTTPS agent to ignore self-signed certificate errors
 const agent = new https.Agent({

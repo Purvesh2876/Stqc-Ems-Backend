@@ -16,8 +16,8 @@ const macWifiModel = require('../models/macWifimodel');
 const mongoose = require('mongoose');
 const https = require('https');
 const axios = require('axios');
-const apiUrl = 'https://p2p.arcisai.io:7201/api/proxy/http';
-const basicAuth = `Basic ${Buffer.from(`admin:admin`).toString('base64')}`;
+const apiUrl = 'https://frp.arcisai.io:7500/api/proxy/tcp';
+const basicAuth = `Basic ${Buffer.from(`Arcis:toR@81555que`).toString('base64')}`;
 const path = require('path');
 const fs = require('fs');
 const ffmpeg = require('fluent-ffmpeg');
@@ -25,7 +25,7 @@ const ffmpeg = require('fluent-ffmpeg');
 // create instance of axios with custom config
 const instance = axios.create({
     // baseURL: 'https://dev.arcisai.io/backend/api/admin',
-    baseURL: 'https://view.arcisai.io/backend/api/admin',
+    baseURL: 'https://home.arcisai.io/backend/api/admin',
     httpsAgent: new https.Agent({
         rejectUnauthorized: false
     })
@@ -63,9 +63,8 @@ exports.addCamera = async (req, res) => {
 
         // 2. Determine cameraType and localPort based on productType
         // Using optional chaining and default logic
-        const isAugentix = existp2p.productType && existp2p.productType.toLowerCase().includes('augentix');
-        const cameraType = isAugentix ? 'https' : 'http';
-        const localPort = isAugentix ? 443 : 80;
+        const cameraType = 'https';
+        const localPort = 443;
 
         const existingConfig = await Config.findOne({ topic: deviceId }).session(session);
         if (existingConfig) {
@@ -80,10 +79,11 @@ exports.addCamera = async (req, res) => {
             local_ip: '127.0.0.1',
             subdomain: deviceId,
             host_header_rewrite: 'torqueverse.dev',
-            server_addr: 'p2p.arcisai.io',
+            server_addr: 'frp.arcisai.io',
             server_port: 7000,
             token: '12345678',
-            planName: existp2p.productType === 'vod' ? 'DVR-30' : planName,
+            // planName: existp2p.productType === 'vod' ? 'DVR-30' : planName,
+            planName: planName,
         };
         await Config.updateOne({ topic: deviceId }, cfgdata, { upsert: true, session });
 
@@ -215,28 +215,26 @@ exports.addCamera = async (req, res) => {
 
         // Firmware
         let firmwareName = null;
-        let productTypeValue = "PTZ_S_Series";
+        let productTypeValue = null;
+
         console.log('existp2p.productType:', existp2p.productType);
-        if (existp2p.productType?.includes("Augentix")) {
-            firmwareName = "A_Series_0.10.1"; // this is for augentix and need to replace it during next kitty update
-            productTypeValue = "Augentix";
-        } else if (deviceId.startsWith('ATPL')) {
-            firmwareName = "S_Series_0.10.0";
-            productTypeValue = "S_Series";
-        } else if (deviceId.startsWith('VSPL')) {
-            firmwareName = "A_series_0.10.0";
-            productTypeValue = "VSPL";
+
+        if (!existp2p?.productType || !existp2p.productType.includes("Augentix")) {
+            throw new Error("Unsupported product type. Only Augentix devices are allowed.");
         }
+
+        firmwareName = "A_Series_0.10.1"; // temporary, to be updated in next Kitty release
+        productTypeValue = "Augentix";
+
 
         let firmwareData = null;
         if (firmwareName) {
             // Re-using the logic from top, checking isAugentix from 'existp2p' or 'productTypeValue'
             // Since productTypeValue logic matches the initial check logic, we can reuse 'isAugentix' here
             // if strict alignment is needed, or stick to the logic below:
-            const isAugentixFirmware = productTypeValue.toLowerCase().includes("augentix");
             firmwareData = {
                 deviceId,
-                mqttUrl:"mqtts://pro.arcisai.io:8883",
+                mqttUrl: "mqtts://pro.arcisai.io:8883",
                 productType: productTypeValue,
                 p2pAmbicam: "P2Pambicam_0.8",
                 vcamAmbicam: "vcamclient-uclinux_0.9",
@@ -798,7 +796,7 @@ exports.addMultipleCameras = async (req, res) => {
                     local_ip: '127.0.0.1',
                     subdomain: deviceId,
                     host_header_rewrite: 'torqueverse.dev',
-                    server_addr: 'p2p.arcisai.io',
+                    server_addr: 'frp.arcisai.io',
                     server_port: 7000,
                     token: '12345678',
                     planName: 'LIVE',

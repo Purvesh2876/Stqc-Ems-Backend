@@ -3638,7 +3638,7 @@ exports.get_VideoSettings = async (req, res) => {
         const deviceId = req.query.deviceId;
 
         let responseSent = false; // Flag to prevent multiple responses
-        const response = await axios.get(`https://view.arcisai.io/backend/api/setting/getQualityinternal?deviceId=${deviceId}`);
+        const response = await axios.get(`https://home.arcisai.io/backend/api/setting/getQualityinternal?deviceId=${deviceId}`);
 
         const options = {
             username: process.env.mqttuser,
@@ -3722,7 +3722,7 @@ exports.set_VideoSettings = async (req, res) => {
             console.error("Error closing stream:", error);
         })
         .finally(async () => {
-            const response = await axios.post(`https://view.arcisai.io/backend/api/setting/setQualityDb?deviceId=${deviceId}`, { quality });
+            const response = await axios.post(`https://home.arcisai.io/backend/api/setting/setQualityDb?deviceId=${deviceId}`, { quality });
 
             const { mqttCase, body } = getRequestData(quality, frameRate, constantBitRate);
             console.log("Request Data:", { mqttCase, body });
