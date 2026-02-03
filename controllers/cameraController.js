@@ -236,7 +236,7 @@ exports.addCamera = async (req, res) => {
             const isAugentixFirmware = productTypeValue.toLowerCase().includes("augentix");
             firmwareData = {
                 deviceId,
-                mqttUrl: isAugentixFirmware ? "mqtts://pro.arcisai.io:8883" : "tcp://prong.arcisai.io:1883",
+                mqttUrl:"mqtts://pro.arcisai.io:8883",
                 productType: productTypeValue,
                 p2pAmbicam: "P2Pambicam_0.8",
                 vcamAmbicam: "vcamclient-uclinux_0.9",
@@ -469,7 +469,7 @@ exports.addP2PCamera = async (req, res) => {
             return res.status(400).json({ message: 'camera already exists' });
         }
 
-        let mqttUrl = "tcp://prong.arcisai.io:1883";
+        let mqttUrl = "mqtts://pro.arcisai.io:8883";
 
         if (productType.toLowerCase().includes("augentix")) {
             mqttUrl = "mqtts://pro.arcisai.io:8883";
@@ -692,9 +692,7 @@ exports.addMultipleP2PCameras = async (req, res) => {
             const beforeChange = existingMap.get(trimmedId) || null;
 
             // Determine mqttUrl based on productType
-            const mqttUrl = trimmedType.toLowerCase().includes("augentix")
-                ? "mqtts://pro.arcisai.io:8883"
-                : "tcp://prong.arcisai.io:1883";
+            const mqttUrl = "mqtts://pro.arcisai.io:8883";
 
             // Prepare history entry
             historyEntries.push({
@@ -948,7 +946,7 @@ exports.addMultipleCameras = async (req, res) => {
                             update: {
                                 $set: {
                                     deviceId,
-                                    mqttUrl: "tcp://prong.arcisai.io:1883",
+                                    mqttUrl: "mqtts://pro.arcisai.io:8883",
                                     productType: "PTZ_S_Series",
                                     p2pAmbicam: "P2Pambicam_0.8",
                                     vcamAmbicam: "vcamclient-uclinux_0.9",
@@ -967,7 +965,7 @@ exports.addMultipleCameras = async (req, res) => {
                             update: {
                                 $set: {
                                     deviceId,
-                                    mqttUrl: "tcp://prong.arcisai.io:1883",
+                                    mqttUrl: "mqtts://pro.arcisai.io:8883",
                                     productType: "VSPL",
                                     p2pAmbicam: "P2Pambicam_0.8",
                                     vcamAmbicam: "vcamclient-uclinux_0.9",
@@ -1202,7 +1200,7 @@ exports.addFirmware = async (req, res) => {
         if (deviceId.startsWith('ATPL')) {
             const firmwareData = {
                 deviceId: deviceId,
-                mqttUrl: "tcp://prong.arcisai.io:1883",
+                mqttUrl: "mqtts://pro.arcisai.io:8883",
                 productType: productType,
                 p2pAmbicam: "P2Pambicam_0.8",
                 vcamAmbicam: "vcamclient-uclinux_0.9",
@@ -1214,7 +1212,7 @@ exports.addFirmware = async (req, res) => {
         if (deviceId.startsWith('VSPL')) {
             const firmwareData = {
                 deviceId: deviceId,
-                mqttUrl: "tcp://prong.arcisai.io:1883",
+                mqttUrl: "mqtts://pro.arcisai.io:8883",
                 productType: productType,
                 p2pAmbicam: "P2Pambicam_0.8",
                 vcamAmbicam: "vcamclient-uclinux_0.9",
