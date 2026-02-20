@@ -1,7 +1,6 @@
 const express = require('express');
 const { getVideoEncodeChannelMain, setVideoEncodeChannelMain, getVideoEncodeChannelSub, setVideoEncodeChannelSub, getVideoSettings, setVideoSettings, getNetworkInterfaceSettings, netInfo, getImageInfo, setImageInfo, OSDController, getDeviceInfo, getTimesettings, setTimesettings, getOTA, setOTA, addUser, deleteUser, setConfig62, get_VideoSettings, set_VideoSettings } = require('../controllers/settingsController');
 const { isAuthenticatedUser } = require('../middleware/authMiddleware');
-// const { connectedClients } = require('../services/mqttHelper');
 
 const router = express.Router();
 // DATABASE INVOLVED

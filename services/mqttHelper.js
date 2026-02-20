@@ -18,13 +18,18 @@ const audioBuffers = {};
 export const connectedClients = new Set();
 
 // MQTT Setup
-const mqttClient = mqtt.connect('http://prong.arcisai.io:1883', {
+const mqttClient = mqtt.connect('https://ems.devices.arcisai.io:8883', {
     username: 'Torque',
     password: 'Raptor@0'
 });
 
 // HTTPS Agent for self-signed certs
-const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+const httpsAgent = new https.Agent({
+    cert: fs.readFileSync(path.join(__dirname, "/etc/ssl/rahul-arcisai-hsm/wildcard.crt")),
+    key: fs.readFileSync(path.join(__dirname, "/etc/ssl/rahul-arcisai-hsm/wildcard.key")),
+    ca: fs.readFileSync(path.join(__dirname, "/etc/ssl/rahul-arcisai-hsm/ca-chain.pem")),
+    rejectUnauthorized: true, // IMPORTANT for production
+});
 
 // Utilities
 function pad(n) {
@@ -106,7 +111,7 @@ mqttClient.on('message', async (topic, messageBuffer, packet) => {
                 case '0': {
 
                     const basicAuth = `Basic ${Buffer.from('admin:admin').toString('base64')}`;
-                    const apiUrl = 'https://p2p.arcisai.io:7201/api/proxy/http';
+                    const apiUrl = `${process.env.P2P_URL}`;
 
                     const currentDate = new Date();
                     const dateFormatter = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Kolkata' });
@@ -116,7 +121,12 @@ mqttClient.on('message', async (topic, messageBuffer, packet) => {
                     const currentTimeString = timeFormatter.format(currentDate);
 
                     const [proxyRes] = await Promise.all([
-                        axios.get(apiUrl, { httpsAgent, headers: { Authorization: basicAuth } }),
+                        axios.get(apiUrl, {
+                            httpsAgent, headers: {
+                                "X-API-Key": process.env.P2P_API_KEY,
+                                "Accept": "application/json"
+                            },
+                        }),
                     ]);
 
                     const payload = JSON.parse(payloadStr);
@@ -330,18 +340,18 @@ mqttClient.on('message', async (topic, messageBuffer, packet) => {
                     const firmwareInfo = await firmware.findOne({ deviceId: deviceIdApp });
                     console.log(firmwareInfo);
                     if (firmwareInfo.productType === 'Augentix') {
-                        const updatePath = 'http://prong.arcisai.io/protected/augentix/0.1/Augentix.tar.gz'
+                        const updatePath = 'https://ems.devices.arcisai.io/protected/augentix/0.1/Augentix.tar.gz'
                         console.log('Publishing Augentix update path', updatePath);
                         publishMessage(newTopicCamera, updatePath);
                         break;
                     }
                     else if (firmwareInfo.productType === 'VSPL') {
-                        const updatePath = 'http://prong.arcisai.io/protected/A-Series/ambicam.tar.gz'
+                        const updatePath = 'https://ems.devices.arcisai.io/protected/A-Series/ambicam.tar.gz'
                         publishMessage(newTopicCamera, updatePath);
                         break;
                     }
                     else if (firmwareInfo.productType === 'PTZ_S_Series') {
-                        const updatePath = 'http://prong.arcisai.io/protected/S-Series/S_Series.tar.gz'
+                        const updatePath = 'https://ems.devices.arcisai.io/protected/S-Series/S_Series.tar.gz'
                         publishMessage(newTopicCamera, updatePath);
                         break;
                     }

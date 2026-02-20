@@ -1,14 +1,17 @@
 const Firmware = require('../models/firmware');
-const apiUrl = 'https://pro.arcisai.io:3000/clients';
 const axios = require('axios');
 const https = require('https');
 const fs = require('fs');
 const FormData = require('form-data');
 const FirmwareOtaRelease = require('../models/firmwareOtaRelease');
+const apiUrl = `${process.env.MQTT_CONNECTED_DEVICES}`;
 
-// define https agent 
+
 const httpsAgent = new https.Agent({
-    rejectUnauthorized: false,
+    cert: fs.readFileSync(path.join(__dirname, "/etc/ssl/rahul-arcisai-hsm/wildcard.crt")),
+    key: fs.readFileSync(path.join(__dirname, "/etc/ssl/rahul-arcisai-hsm/wildcard.key")),
+    ca: fs.readFileSync(path.join(__dirname, "/etc/ssl/rahul-arcisai-hsm/ca-chain.pem")),
+    rejectUnauthorized: true, // IMPORTANT for production
 });
 
 
@@ -124,7 +127,7 @@ exports.releseFirmware = async (req, res, next) => {
 
         // Upload to Prong
         const uploadResponse = await axios.post(
-            'http://prong.arcisai.io:6000/upload',
+            'https://ems.devices.arcisai.io/upload',
             form,
             { headers: { ...form.getHeaders() } }
         );

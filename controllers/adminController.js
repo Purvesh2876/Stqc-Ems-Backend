@@ -3,13 +3,17 @@ const https = require("https");
 const Config = require("../models/Config");
 const p2predirect = require("../models/p2predirect");
 
+const httpsAgent = new https.Agent({
+  cert: fs.readFileSync(path.join(__dirname, "/etc/ssl/rahul-arcisai-hsm/wildcard.crt")),
+  key: fs.readFileSync(path.join(__dirname, "/etc/ssl/rahul-arcisai-hsm/wildcard.key")),
+  ca: fs.readFileSync(path.join(__dirname, "/etc/ssl/rahul-arcisai-hsm/ca-chain.pem")),
+  rejectUnauthorized: true, // IMPORTANT for production
+});
+
 // create instance of axios with custom config
 const instance = axios.create({
-  // baseURL: 'https://delta.arcisai.io/backend/api/admin',
-  baseURL: "https://home.arcisai.io/backend/api/admin",
-  httpsAgent: new https.Agent({
-    rejectUnauthorized: false,
-  }),
+  baseURL: "https://vms.devices.arcisai.io/backend/api/admin",
+  httpsAgent,
 });
 
 // get all users
@@ -185,16 +189,12 @@ exports.updateCamera = async (req, res) => {
 
       // --- A. Update p2predirect (ProductType & MQTT URL) ---
       if (productType) {
-        // const mqttUrl = productType.toLowerCase().includes("augentix")
-        //   ? "mqtts://pro.arcisai.io:8883"
-        //   : "tcp://prong.arcisai.io:1883";
 
         await p2predirect.updateOne(
           { deviceId },
           {
             $set: {
               productType
-              // mqttUrl
             }
           }
         );
@@ -496,32 +496,6 @@ exports.getDashboardData = async (req, res) => {
     console.log("🎯 [END] getDashboardData completed successfully");
   } catch (error) {
     console.error("❌ [ERROR] getDashboardData failed:", error);
-    res.status(500).json({ message: error.message });
-  }
-};
-
-exports.getAbdDevice = async (req, res) => {
-  try {
-    const User = req.user;
-    const response = await axios.get(
-      `https://dev.arcisai.io/backend/api/admin/getAbdDevice`,
-      {
-        params: {
-          page: req.query.page || 1,
-          limit: req.query.limit || 10,
-          deviceId: req.query.deviceId || "",
-          email: req.query.email || "",
-        },
-      }
-    );
-    const camera = response.data.data;
-    res.json({
-      success: true,
-      data: camera,
-      usersRole: User.role,
-      pagination: response.data.pagination, // Preserve original pagination
-    });
-  } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
